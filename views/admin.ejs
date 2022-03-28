@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員頁面</title>
+</head>
+<body>
+    <h3>歡迎光臨 <%= name %></h3>
+    <a href="/signout">登出系統</a>
+    <h3>我要留言</h3>
+    <form method="POST" action="/admin/addMessage">
+        輸入內容 <input type="text" name="content">
+        <button>送出</button>
+    </form>
+    <hr/>
+    <% messages.forEach((message)=>{ %>
+        <div><%= message.name %> : <%= message.content %></div>
+    <% }) %>
+</body>
+</html>
