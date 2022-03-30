@@ -45,7 +45,12 @@ app.post("/signup",async (req,res)=>{
         level:1
     };
     // console.log(data);
-
+    if(data.name === "" || data.email === "" || data.password === ""){
+        console.log("欄位不可為空");
+        res.send("欄位不可為空");
+        return;
+    };
+    
     // 檢查資料庫中是否有重複的Email
     const result = await collection.findOne({
         email:data.email
