@@ -20,6 +20,7 @@ app.use(session({
 
 // 初始化資料庫的連線
 const client = require("./connect");
+const { ObjectId } = require("mongodb");
 client.connect(async err =>{
     if(err){
         console.log(err);
@@ -45,6 +46,11 @@ app.post("/signup",async (req,res)=>{
         level:1
     };
     // console.log(data);
+    if(data.name === "" || data.email === "" || data.password === ""){
+        console.log("欄位不可為空");
+        res.send("欄位不可為空");
+        return;
+    };
 
     // 檢查資料庫中是否有重複的Email
     const result = await collection.findOne({
@@ -85,7 +91,8 @@ app.post("/signin",async (req,res)=>{
         // 在session中記錄使用者姓名信箱，導向會員頁 /admin
         req.session["member"] = {
             name:result.name,
-            email:result.email
+            email:result.email,
+            password:result.password
         };
         // console.log(req.session);
         res.redirect("/admin");
@@ -144,6 +151,54 @@ app.post("/admin/addMessage",async (req,res)=>{
     });
     // 導回會員頁
     res.redirect("/admin");
+});
+
+app.get("/admin/edit",async (req,res)=>{
+    if (req.session["member"]){
+        const data = {
+            name:req.session.member.name
+        };
+        res.render("edit.ejs",data);
+    }
+    else{
+        res.send("沒有登入");
+        return;
+    }
+});
+
+app.post("/admin/editData",async (req,res)=>{
+    if (req.session["member"]){
+        const data = {
+            name:req.body.name,
+            pwd_old:req.body.pwd_old,
+            pwd_new:req.body.pwd_new
+        };
+        if(data.name === "" || data.pwd_old === "" || data.pwd_new === ""){
+            res.send("欄位不可為空");
+            return;
+        };
+        if (data.pwd_old != req.session.member.password){
+            res.send("原始密碼錯誤");
+            return;
+        }
+        else{
+            const collection = client.db("dbtest").collection("member");
+            await collection.updateOne({
+                email:req.session.member.email
+            },{
+                $set:{
+                    name:data.name,
+                    password:data.pwd_new
+                }
+            });
+            req.session["member"] = null;
+            res.redirect("/");
+        }
+    }
+    else{
+        res.send("沒有登入");
+        return;
+    }
 });
 
 app.listen(3000,()=>{
