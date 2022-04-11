@@ -5,6 +5,7 @@ const app = express();
 // 支援POST方法取得要求字串的欄位
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json());
 
 // 使用樣板引擎EJS--安裝,設定
 app.set("view enginee","ejs");  //使用EJS當樣板引擎
@@ -20,7 +21,6 @@ app.use(session({
 
 // 初始化資料庫的連線
 const client = require("./connect");
-const { ObjectId } = require("mongodb");
 client.connect(async err =>{
     if(err){
         console.log(err);
@@ -46,6 +46,11 @@ app.post("/signup",async (req,res)=>{
         level:1
     };
     // console.log(data);
+    if(data.name === "" || data.email === "" || data.password === ""){
+        console.log("欄位不可為空");
+        res.send("欄位不可為空");
+        return;
+    };
 
     // 檢查資料庫中是否有重複的Email
     const result = await collection.findOne({
@@ -148,6 +153,7 @@ app.post("/admin/addMessage",async (req,res)=>{
     res.redirect("/admin");
 });
 
+// 修改密碼 /admin/edit
 app.get("/admin/edit",async (req,res)=>{
     if (req.session["member"]){
         const data = {
@@ -161,14 +167,15 @@ app.get("/admin/edit",async (req,res)=>{
     }
 });
 
-app.post("/admin/editData",async (req,res)=>{
+app.post("/admin/pwd_change",async (req,res)=>{
+    // 驗證是否有登入
     if (req.session["member"]){
+        // 取得前端資料
         const data = {
-            name:req.body.name,
             pwd_old:req.body.pwd_old,
             pwd_new:req.body.pwd_new
         };
-        if(data.name === "" || data.pwd_old === "" || data.pwd_new === ""){
+        if(data.pwd_old === "" || data.pwd_new === ""){
             res.send("欄位不可為空");
             return;
         };
@@ -178,17 +185,39 @@ app.post("/admin/editData",async (req,res)=>{
         }
         else{
             const collection = client.db("dbtest").collection("member");
+            // 更新密碼
             await collection.updateOne({
                 email:req.session.member.email
             },{
                 $set:{
-                    name:data.name,
                     password:data.pwd_new
                 }
             });
+            // 清掉登入紀錄，並導回首頁
             req.session["member"] = null;
             res.redirect("/");
         }
+    }
+    else{
+        res.send("沒有登入");
+        return;
+    }
+});
+
+// 查看留言者公開資訊 /show/:email
+app.get("/show/:email",async (req,res)=>{
+    // 驗證是否有登入
+    if (req.session["member"]){
+        const email = req.params.email;
+        const collection = client.db("dbtest").collection("member");
+        const people = await collection.findOne({email:email});
+        // console.log(people);
+        const peo = {
+            name:people.name,
+            email:people.email
+        };
+        // console.log(peo);
+        res.render("show.ejs",peo);
     }
     else{
         res.send("沒有登入");

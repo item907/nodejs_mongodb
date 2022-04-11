@@ -8,13 +8,20 @@
 </head>
 <body>
     <h3>您好 <%= name %></h3>
-    <h3>修改會員資料</h3>
+    <h3>修改密碼</h3>
     <hr/>
-    <form method="POST" action="/admin/editData">
-        姓名 <input type="text" name="name" value="<%= name %>"><br>
+    <form method="POST" action="/admin/pwd_change">
+        姓名 <input type="text" name="name" value="<%= name %>" disabled><br>
         原始密碼 <input type="password" name="pwd_old"><br>
         新密碼 <input type="password" name="pwd_new"><br>
-        <button>確定</button>
+        <button id="edit_confirm">確定</button>&nbsp<button type="button" id="edit_cancel">取消</button>
     </form>
+
+    <script>
+        const edit_cancel = document.getElementById("edit_cancel");
+        edit_cancel.addEventListener("click",()=>{
+            window.location = "/admin";
+        });
+    </script>
 </body>
 </html>
