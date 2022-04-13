@@ -26,7 +26,7 @@ client.connect(async err =>{
         console.log(err);
     }else{
         console.log("Database Ready");
-    }
+    };
 });
 
 // 首頁
@@ -102,7 +102,7 @@ app.post("/signin",async (req,res)=>{
         req.session["member"] = null;
         // console.log(req.session);
         res.redirect("/");
-    }
+    };
 });
 
 // 登出功能 /signout
@@ -131,24 +131,31 @@ app.get("/admin", async (req,res)=>{
     }
     else{
         res.send("沒有登入");
-    }
+    };
 });
 
 app.post("/admin/addMessage",async (req,res)=>{
     // 驗證使用者確實有登入
     if (!req.session["member"]){
         return;
-    }
+    };
+
     // 取得前端的留言內容
     const content = req.body.content;
-    // 寫入留言資料庫
-    const messages = client.db("dbtest").collection("message");
-    await messages.insertOne({
-        name:req.session.member.name,
-        email:req.session.member.email,
-        content:content,
-        time:Date.now()
-    });
+
+    // 空值不建立資料
+    // console.log(content);
+    if (content.trim() !== ""){
+        // 寫入留言資料庫
+        const messages = client.db("dbtest").collection("message");
+        await messages.insertOne({
+            name:req.session.member.name,
+            email:req.session.member.email,
+            content:content,
+            time:Date.now()
+        });
+    };
+
     // 導回會員頁
     res.redirect("/admin");
 });
@@ -164,7 +171,7 @@ app.get("/admin/edit",async (req,res)=>{
     else{
         res.send("沒有登入");
         return;
-    }
+    };
 });
 
 app.post("/admin/pwd_change",async (req,res)=>{
@@ -196,12 +203,12 @@ app.post("/admin/pwd_change",async (req,res)=>{
             // 清掉登入紀錄，並導回首頁
             req.session["member"] = null;
             res.redirect("/");
-        }
+        };
     }
     else{
         res.send("沒有登入");
         return;
-    }
+    };
 });
 
 // 查看留言者公開資訊 /show/:email
@@ -222,7 +229,7 @@ app.get("/show/:email",async (req,res)=>{
     else{
         res.send("沒有登入");
         return;
-    }
+    };
 });
 
 app.listen(3000,()=>{
